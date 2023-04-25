@@ -25,8 +25,5 @@ summary(model, (3, 224, 224), device = 'cpu')
 trainset = datasource.get_trainset(root = 'seg_train/seg_train/')
 testset, valset = datasource.get_test_valset(root = 'seg_test/seg_test/')
 
-print(len(trainset))
-print(len(valset))
-print(len(testset))
 # Train(model = model, trainset = trainset, valset = valset)
 # Test(model = model, testset = testset)
