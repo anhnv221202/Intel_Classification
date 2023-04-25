@@ -16,5 +16,5 @@ class myInceptionV3(nn.Module):
         super(myInceptionV3, self).__init__()
 
 
-model = BIInceptionV3(init_weights = True)
-summary(model, (3, 299, 299), device = 'cpu')
+# model = BIInceptionV3(init_weights = True)
+# summary(model, (3, 299, 299), device = 'cpu')

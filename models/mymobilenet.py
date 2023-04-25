@@ -116,6 +116,6 @@ class myMobileNetV2(nn.Module): ## currently unavailable
 #     def __init__(self, num_classes: int = 6, width_mult: float = 1, inverted_residual_setting = None, round_nearest: int = 8, block = None, norm_layer= None, dropout: float = 0.2) -> None:
 #         super().__init__(num_classes, width_mult, inverted_residual_setting, round_nearest, block, norm_layer, dropout)
 
-model = myMobileNetV1()
-print(model)
-summary(model, (3, 224, 224), device = 'cpu')
+# model = myMobileNetV1()
+# print(model)
+# summary(model, (3, 224, 224), device = 'cpu')
