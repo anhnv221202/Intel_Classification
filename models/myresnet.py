@@ -4,6 +4,8 @@ import torchvision
 from torchsummary import summary
 import torch.nn.functional as F
 
+### ResNet all versions
+
 class myresblock(nn.Module):
     def __init__(self, ic: int, oc: int):
         super(myresblock, self).__init__()
