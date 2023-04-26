@@ -27,50 +27,7 @@ class DSConv1(nn.Module):
         return x
 
 
-class myIRBlock(nn.Module):
-    def __init__(self, ic: int, oc: int, multi: int, num_block: int, strid: int):
-        super(myIRBlock, self).__init__()
-        mc = ic * multi
-        self.block1 = nn.Sequential(
-            nn.Conv2d(ic, mc, 1, 1, 0),
-            nn.BatchNorm2d(mc),
-            nn.ReLU6(inplace = True)
-        )
-        if num_block == 2:
-            self.block2 = nn.Sequential()
-        else:
-            self.block2 = nn.Sequential(
-                nn.Conv2d(mc, mc, 3, strid, 1),
-                nn.BatchNorm2d(mc),
-                nn.ReLU6(inplace = True)
-            )
-        self.block3 = nn.Sequential(
-            nn.Conv2d(mc, oc, 1, 1, 0),
-            nn.BatchNorm2d(oc),
 
-        )
-
-
-        self.shortcut = nn.Sequential()
-        if strid == 2 or ic != oc:
-            self.shortcut = nn.Sequential(
-                nn.Conv2d(ic, oc, 1, strid, 0),
-                nn.BatchNorm2d(oc),
-                nn.ReLU6(inplace = True)
-            )
-    def forward(self, x: torch.Tensor):
-        x0 = x.clone()
-
-        x = self.block1(x)
-
-        x = self.block2(x)
-
-        x = self.block3(x)
-
-
-        x0 = self.shortcut(x0)
-        x = x + x0
-        return x
 
 class myMobileNetV1(nn.Module):
     def __init__(self, num_classes: int = 6):
@@ -105,17 +62,119 @@ class myMobileNetV1(nn.Module):
         x = self.fc(x)
         return x
 
+class myIRBlock1(nn.Module):
+    def __init__(self, ic: int, mul: int, oc: int, strid: int) -> None:
+        super(myIRBlock1, self).__init__()
+        mc = mul * ic
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(ic, mc, 1, 1, 0),
+            nn.BatchNorm2d(mc),
+            nn.ReLU6(inplace = True)
+        )
+
+        self.dw1 = nn.Sequential(
+            nn.Conv2d(mc, mc, 3, strid, 1, groups = mc),
+            nn.BatchNorm2d(mc),
+            nn.ReLU6(inplace = True),
+        )
+
+        self.project1 = nn.Sequential(
+            nn.Conv2d(mc, oc, 1, 1, 0),
+            nn.BatchNorm2d(oc)
+        )
+    def forward(self, x: torch.Tensor):
+        x = self.conv1(x)
+        x = self.dw1(x)
+        x = self.project1(x)
+        return x
+
+
+class myIRBlock2(nn.Module):
+    def __init__(self, ioc: int, mul: int) -> None:
+        super(myIRBlock2, self).__init__()
+        mc = ioc * mul
+        self.expand = nn.Sequential(
+            nn.Conv2d(ioc, mc, 1, 1, 0),
+            nn.BatchNorm2d(mc),
+            nn.ReLU6(inplace = True)
+        )
+
+        self.dw = nn.Sequential(
+            nn.Conv2d(mc, mc, 3, 1, 1, groups = mc),
+            nn.BatchNorm2d(mc),
+            nn.ReLU6(inplace = True)
+        )
+
+        self.project = nn.Sequential(
+            nn.Conv2d(mc, ioc, 1, 1, 0),
+            nn.BatchNorm2d(ioc)
+        )
+
+    def forward(self, x: torch.Tensor):
+        x0 = x.clone()
+        x = self.expand(x)
+        x = self.dw(x)
+        x = self.project(x)
+        x = F.relu6(x + x0)
+        return x
+
+
 class myMobileNetV2(nn.Module): ## currently unavailable
     def __init__(self, num_classes: int = 6):
         super(myMobileNetV2, self).__init__()
-        pass
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(3, 32, 3, 2, 1),
+            nn.BatchNorm2d(32),
+            nn.ReLU6(inplace = True)
+        )
+
+        self.dw1 = nn.Sequential(
+            nn.Conv2d(32, 32, 3, 1, 1, groups = 32),
+            nn.BatchNorm2d(32),
+            nn.ReLU6(inplace = True),
+            nn.Conv2d(32, 16, 1, 1, 0),
+            nn.BatchNorm2d(16),
+        )
+
+        self.blocks = nn.Sequential(
+            myIRBlock1(16, 6, 24, 2),
+            myIRBlock2(24, 6),
+            myIRBlock1(24, 6, 32, 2),
+            myIRBlock2(32, 6),
+            myIRBlock2(32, 6),
+            myIRBlock1(32, 6, 64, 2),
+            myIRBlock2(64, 6),
+            myIRBlock2(64, 6),
+            myIRBlock2(64, 6),
+            myIRBlock1(64, 6, 96, 1),
+            myIRBlock2(96, 6),
+            myIRBlock2(96, 6),
+            myIRBlock1(96, 6, 160, 2),
+            myIRBlock2(160, 6),
+            myIRBlock2(160, 6),
+            myIRBlock1(160, 6, 320, 1)
+        )
+
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(320, 1280, 1, 1, 0),
+            nn.BatchNorm2d(1280),
+            nn.ReLU6(inplace = True)
+        )
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+        self.fc = nn.Linear(1280, num_classes)
     def forward(self, x: torch.Tensor):
+        x = self.conv1(x)
+        x = self.dw1(x)
+        x = self.blocks(x)
+        x = self.conv2(x)
+        x = self.avgpool(x)
+        x = x.view(x.shape[0], -1)
+        x = self.fc(x)
         return x
 
-# class BIMobileNetV2(MobileNetV2):
-#     def __init__(self, num_classes: int = 6, width_mult: float = 1, inverted_residual_setting = None, round_nearest: int = 8, block = None, norm_layer= None, dropout: float = 0.2) -> None:
-#         super().__init__(num_classes, width_mult, inverted_residual_setting, round_nearest, block, norm_layer, dropout)
 
-# model = myMobileNetV1()
+# model = myMobileNetV2()
 # print(model)
 # summary(model, (3, 224, 224), device = 'cpu')
