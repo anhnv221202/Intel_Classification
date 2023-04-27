@@ -54,7 +54,7 @@ def Train(model: nn.Module, trainset: Dataset, valset: Dataset, use_subset: bool
   1. `model` is an instance in `nn.Module` abstract class and will be considered during this training session
   2. `trainset` is the dataset used for training
   3. `valset` is the dataset used for validating
-  4. `use_subset` indicates whether only a subset or the entire `trainset` and `valset` will be used during validation stage
+  4. `use_subset` indicates whether only a subset or the entire `trainset` and `valset` will be used to acquire the loss and accuracy in the (sub)training set and (sub)validation set
   5. `epoch_num`, `bs`, `lr`, `momentum`, `weight_decay` are hyperparameters
   6. `show_progress` if set to `True`, then the training accuracy will be displayed to the screen after each completed epoch
   7. `save_fig` if set to `True`, plot and save the accuracy and loss graph in the `acc_and_loss` folder
@@ -86,13 +86,13 @@ def Train(model: nn.Module, trainset: Dataset, valset: Dataset, use_subset: bool
       optimizer.step()
 
     with torch.no_grad():
-        if not use_subset:
-            acc_train, loss_train = acc_and_loss(net = model, dataset = trainset, batch_size = bs)
-            acc_val, loss_val = acc_and_loss(model, dataset = valset, batch_size = bs)
-        else:
-            acc_train, loss_train = acc_and_loss(net = model, dataset = subtrainset, batch_size = bs)
-            acc_val, loss_val = acc_and_loss(model, dataset = subvalset, batch_size = bs)
-    
+      if not use_subset:
+        acc_train, loss_train = acc_and_loss(net = model, dataset = trainset, batch_size = bs)
+        acc_val, loss_val = acc_and_loss(model, dataset = valset, batch_size = bs)
+      else:
+        acc_train, loss_train = acc_and_loss(net = model, dataset = subtrainset, batch_size = bs)
+        acc_val, loss_val = acc_and_loss(model, dataset = subvalset, batch_size = bs)
+  
     
     train_acc_rec.append(acc_train)
     train_loss_rec.append(loss_train.item())
