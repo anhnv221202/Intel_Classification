@@ -63,7 +63,7 @@ def Train(model: nn.Module, trainset: Dataset, valset: Dataset, use_subset: bool
   criterion = nn.CrossEntropyLoss()
   optimizer = torch.optim.SGD(model.parameters(), lr = lr, momentum = momentum, weight_decay = weight_decay)
 
-  subset_indices = [i for i in range(2000)]
+  subset_indices = [i for i in range(1000)]
   subtrainset = Subset(trainset, indices = subset_indices)
   subvalset = Subset(valset, indices = subset_indices)
 
