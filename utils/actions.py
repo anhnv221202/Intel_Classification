@@ -94,18 +94,14 @@ def Train(model: nn.Module, trainset: Dataset, valset: Dataset, use_subset: bool
         acc_val, loss_val = acc_and_loss(model, dataset = subvalset, batch_size = bs)
   
     
-    train_acc_rec.append(acc_train)
-    train_loss_rec.append(loss_train.item())
-    val_acc_rec.append(acc_val)
-    val_loss_rec.append(loss_val.item())
+    train_acc_rec.append(acc_train.cpu())
+    train_loss_rec.append(loss_train.item().cpu())
+    val_acc_rec.append(acc_val.cpu())
+    val_loss_rec.append(loss_val.item().cpu())
 
     if show_progress:
         print(f'Train acc epoch {epoch}: {acc_train}')
         print(f'Val acc epoch {epoch}: {acc_val}')
-  train_acc_rec = [i.cpu() for i in train_acc_rec]
-  train_loss_rec = [i.cpu() for i in train_loss_rec]
-  val_acc_rec = [i.cpu() for i in val_acc_rec]
-  val_loss_rec = [i.cpu() for i in val_loss_rec]
   
   if save_fig:
     root = './acc_and_loss'
