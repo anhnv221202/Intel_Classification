@@ -348,6 +348,6 @@ class myMobileNetV3_large(nn.Module):
         x = x.squeeze()
         return x
 
-model = myMobileNetV3_small()
-print(model)
-summary(model, (3, 224, 224), device = 'cpu')
+# model = myMobileNetV3_small()
+# print(model)
+# summary(model, (3, 224, 224), device = 'cpu')
